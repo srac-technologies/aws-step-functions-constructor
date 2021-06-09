@@ -1,0 +1,10 @@
+<% for (stateMachine of stateMachines) {%>
+<div>
+  <div>
+    <a href="/state-machines/<%= stateMachine.name %>"><%= stateMachine.stateMachineArn %></a>
+  </div>
+  <div>
+    <%= stateMachine.name %>
+  </div>
+</div>
+<% } %>

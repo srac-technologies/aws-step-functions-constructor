@@ -1,0 +1,15 @@
+<% for(event of events) {%>
+<div>
+  <div>
+    <%= event.timestamp %>
+  </div>
+  <div>
+    <%= event.type %>
+  </div>
+  <div>
+    <pre>
+    <%- JSON.stringify(event.executionStartedEventDetails || event.stateExitedEventDetails || event.lambdaFunctionSucceededEventDetails || event.lambdaFunctionScheduledEventDetails || event.stateEnteredEventDetails) %>
+    </pre>
+  </div>
+</div>
+<% } %>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    html,
+    body {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      background-color: white !important;
+      margin: 0;
+      padding: 0;
+      border: none;
+    }
+
+    .svgWrapper {
+      width: 100%;
+      height: 80%;
+      box-sizing: border-box;
+    }
+
+    .clusters rect {
+      fill: white;
+      stroke: #999;
+      stroke-width: 1.5px;
+    }
+
+    text {
+      font-weight: 300;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+      font-size: 14px;
+    }
+
+    .node rect {
+      stroke: #999;
+      fill: #fff;
+      stroke-width: 1.5px;
+    }
+
+    .edgePath path {
+      stroke: #333;
+      stroke-width: 1.5px;
+    }
+
+    .tooltip {
+      padding: 5px;
+      background-color: white;
+      border: 1px solid grey;
+      border-radius: 5px;
+      color: black;
+    }
+
+    table,
+    td,
+    tr {
+      border: none;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 5px;
+    }
+
+    .tooltipTableRow:nth-child(odd) {
+      background-color: #DDD !important;
+    }
+  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+
+<body id="body">
+  <div class="svgWrapper">
+    <script src="/d3min.js"></script>
+    <script src="/dagre-d3.min.js"></script>
+    <svg width="100%" height="80%">
+      <g /></svg>
+  </div>
+  <script>
+    (function () {
+      function renderObject(object) {
+        const rows = Object.keys(object).map(key => {
+          const value = object[key];
+          return `
+        <tr class="tooltipTableRow">
+          <td>${key}</td>
+          <td>${value}</td>
+        </tr>
+      `;
+        });
+        return `<table>
+      ${rows.join("")}
+    </table>`;
+      }
+
+      (event => {
+        const { serializedGraph, states } = <%-  JSON.stringify(graph) %>;
+        const g = new dagreD3.graphlib.json.read(JSON.parse(serializedGraph));
+        var svg = d3.select("svg"),
+          inner = svg.select("g");
+        // Set up zoom support
+        var zoom = d3.zoom().on("zoom", function () {
+          inner.attr("transform", d3.event.transform);
+        });
+        svg.call(zoom);
+        // Create the renderer
+        var render = new dagreD3.render();
+        // Run the renderer. This is what draws the final graph.
+        try {
+          g.graph().transition = function (selection) {
+            return selection.transition().duration(500);
+          };
+
+          let isTooltipOpened = false;
+
+          var tooltip = d3
+            .select("body")
+            .append("div")
+            .style("position", "absolute")
+            .style("z-index", "10")
+            .style("visibility", "hidden")
+            .style("backgroung-color", "green")
+            .attr("class", "tooltip");
+
+          render(inner, g);
+
+          inner
+            .selectAll("g.node")
+            .on("click", function (data) {
+              if (isTooltipOpened) {
+                isTooltipOpened = false;
+              }
+            })
+            .on("mouseover", function (data) {
+              return tooltip
+                .style("visibility", "visible")
+                .html(renderObject(states[data]));
+            })
+            .on("mousemove", function () {
+              return tooltip
+                .style("top", d3.event.pageY - 10 + "px")
+                .style("left", d3.event.pageX + 10 + "px");
+            })
+            .on("mouseout", function () {
+              return tooltip.style("visibility", "hidden");
+            });
+
+          // Center the graph
+          var initialScale = 1;
+
+          const svgWidth = +svg.style("width").slice(0, -2);
+          const svgHeight = +svg.style("height").slice(0, -2);
+
+          svg.call(
+            zoom.transform,
+            d3.zoomIdentity
+              .translate(
+                (svgWidth - g.graph().width * initialScale) / 2,
+                (svgHeight - g.graph().height * initialScale) / 2
+              )
+              .scale(initialScale)
+          );
+        } catch (error) {
+          console.log(error);
+        }
+
+      })()
+    })();
+
+
+  </script>
+
+  <div>
+    <% for(execution of executions) { %>
+    <div>
+      <div>
+        <a><%= execution.executionArn %></a>
+      </div>
+      <div>
+        <%= execution.startDate %>
+      </div>
+      <div>
+        <%= execution.status %>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</body>
+
+</html>
